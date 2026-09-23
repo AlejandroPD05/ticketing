@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador de Ticketing — Esquema</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="page-header">
+<div class="container">
+<span class="eyebrow">Backend · Java / SQL</span>
+<h1>Simulador de Ticketing</h1>
+<p class="subtitle">Esquema relacional para una aplicación de Helpdesk: usuarios, categorías, tickets y comentarios.</p>
+</div>
+</header>
+
+<main>
+<section class="schema-section">
+<div class="container">
+<h2 class="section-title">Modelo de datos</h2>
+<div class="schema-grid">
+
+<article class="table-card">
+<div class="table-card-head">
+<h3>Usuarios</h3>
+<span class="row-count">7 columnas</span>
+</div>
+<ul class="column-list">
+<li><span class="col-name">id_usuario</span><span class="col-type">INT</span><span class="col-tag tag-pk">PK</span></li>
+<li><span class="col-name">nombre_completo</span><span class="col-type">VARCHAR(100)</span></li>
+<li><span class="col-name">email</span><span class="col-type">VARCHAR(150)</span><span class="col-tag tag-unique">UNIQUE</span></li>
+<li><span class="col-name">password_hash</span><span class="col-type">VARCHAR(255)</span></li>
+<li><span class="col-name">rol</span><span class="col-type">empleado · tecnico · administrador</span></li>
+<li><span class="col-name">departamento</span><span class="col-type">VARCHAR(80)</span></li>
+<li><span class="col-name">fecha_alta</span><span class="col-type">TIMESTAMP</span></li>
+</ul>
+</article>
+
+<article class="table-card">
+<div class="table-card-head">
+<h3>Categorias</h3>
+<span class="row-count">3 columnas</span>
+</div>
+<ul class="column-list">
+<li><span class="col-name">id_categoria</span><span class="col-type">INT</span><span class="col-tag tag-pk">PK</span></li>
+<li><span class="col-name">nombre</span><span class="col-type">VARCHAR(60)</span><span class="col-tag tag-unique">UNIQUE</span></li>
+<li><span class="col-name">descripcion</span><span class="col-type">VARCHAR(255)</span></li>
+</ul>
+</article>
+
+<article class="table-card table-card-featured">
+<div class="table-card-head">
+<h3>Tickets</h3>
+<span class="row-count">10 columnas</span>
+</div>
+<ul class="column-list">
+<li><span class="col-name">id_ticket</span><span class="col-type">INT</span><span class="col-tag tag-pk">PK</span></li>
+<li><span class="col-name">titulo</span><span class="col-type">VARCHAR(150)</span></li>
+<li><span class="col-name">descripcion</span><span class="col-type">TEXT</span></li>
+<li><span class="col-name">estado</span><span class="col-type">Abierto · En_Progreso · Pendiente_Usuario · Resuelto · Cerrado</span></li>
+<li><span class="col-name">prioridad</span><span class="col-type">Baja · Media · Alta · Critica</span></li>
+<li><span class="col-name">fecha_creacion</span><span class="col-type">TIMESTAMP</span></li>
+<li><span class="col-name">fecha_cierre</span><span class="col-type">TIMESTAMP (NULL)</span></li>
+<li><span class="col-name">id_categoria</span><span class="col-type">INT</span><span class="col-tag tag-fk">FK → Categorias</span></li>
+<li><span class="col-name">usuario_creador</span><span class="col-type">INT</span><span class="col-tag tag-fk">FK → Usuarios</span></li>
+<li><span class="col-name">tecnico_asignado</span><span class="col-type">INT (NULL)</span><span class="col-tag tag-fk">FK → Usuarios</span></li>
+</ul>
+</article>
+
+<article class="table-card">
+<div class="table-card-head">
+<h3>Comentarios_Ticket</h3>
+<span class="row-count">5 columnas</span>
+</div>
+<ul class="column-list">
+<li><span class="col-name">id_comentario</span><span class="col-type">INT</span><span class="col-tag tag-pk">PK</span></li>
+<li><span class="col-name">id_ticket</span><span class="col-type">INT</span><span class="col-tag tag-fk">FK → Tickets</span></li>
+<li><span class="col-name">id_usuario</span><span class="col-type">INT</span><span class="col-tag tag-fk">FK → Usuarios</span></li>
+<li><span class="col-name">comentario</span><span class="col-type">TEXT</span></li>
+<li><span class="col-name">fecha_comentario</span><span class="col-type">TIMESTAMP</span></li>
+</ul>
+</article>
+
+</div>
+</div>
+</section>
+
+<section class="relations-section">
+<div class="container">
+<h2 class="section-title">Relaciones</h2>
+<ul class="relations-list">
+<li><span class="rel-from">Tickets.id_categoria</span><span class="rel-arrow">&#8594;</span><span class="rel-to">Categorias.id_categoria</span></li>
+<li><span class="rel-from">Tickets.usuario_creador</span><span class="rel-arrow">&#8594;</span><span class="rel-to">Usuarios.id_usuario</span></li>
+<li><span class="rel-from">Tickets.tecnico_asignado</span><span class="rel-arrow">&#8594;</span><span class="rel-to">Usuarios.id_usuario</span></li>
+<li><span class="rel-from">Comentarios_Ticket.id_ticket</span><span class="rel-arrow">&#8594;</span><span class="rel-to">Tickets.id_ticket</span></li>
+<li><span class="rel-from">Comentarios_Ticket.id_usuario</span><span class="rel-arrow">&#8594;</span><span class="rel-to">Usuarios.id_usuario</span></li>
+</ul>
+</div>
+</section>
+
+<section class="sample-section">
+<div class="container">
+<h2 class="section-title">Datos de ejemplo</h2>
+<div class="table-scroll">
+<table class="sample-table">
+<thead>
+<tr>
+<th>Ticket</th>
+<th>Categoría</th>
+<th>Estado</th>
+<th>Prioridad</th>
+<th>Técnico</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>El ordenador no enciende tras el corte de luz</td>
+<td>Hardware</td>
+<td><span class="pill pill-resuelto">Resuelto</span></td>
+<td><span class="pill pill-alta">Alta</span></td>
+<td>Laura Gómez Martín</td>
+</tr>
+<tr>
+<td>No puedo conectarme a la VPN desde casa</td>
+<td>Redes</td>
+<td><span class="pill pill-progreso">En progreso</span></td>
+<td><span class="pill pill-alta">Alta</span></td>
+<td>Diego Fernández Ibáñez</td>
+</tr>
+<tr>
+<td>Solicito acceso a la carpeta compartida de Nóminas</td>
+<td>Accesos</td>
+<td><span class="pill pill-pendiente">Pendiente usuario</span></td>
+<td><span class="pill pill-media">Media</span></td>
+<td>Laura Gómez Martín</td>
+</tr>
+<tr>
+<td>Outlook no sincroniza el correo desde ayer</td>
+<td>Correo y Comunicaciones</td>
+<td><span class="pill pill-abierto">Abierto</span></td>
+<td><span class="pill pill-media">Media</span></td>
+<td class="muted">Sin asignar</td>
+</tr>
+<tr>
+<td>La impresora de planta 2 no responde</td>
+<td>Hardware</td>
+<td><span class="pill pill-cerrado">Cerrado</span></td>
+<td><span class="pill pill-baja">Baja</span></td>
+<td>Diego Fernández Ibáñez</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+
+<section class="script-section">
+<div class="container">
+<div class="script-head">
+<h2 class="section-title">Script SQL completo</h2>
+<button class="copy-btn" id="copyBtn">Copiar</button>
+</div>
+<pre class="sql-block"><code id="sqlCode">CREATE TABLE Usuarios (
+    id_usuario INT AUTO_INCREMENT PRIMARY KEY,
+    nombre_completo VARCHAR(100) NOT NULL,
+    email VARCHAR(150) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    rol VARCHAR(20) NOT NULL CHECK (rol IN ('empleado', 'tecnico', 'administrador')),
+    departamento VARCHAR(80),
+    fecha_alta TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE Categorias (
+    id_categoria INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(60) NOT NULL UNIQUE,
+    descripcion VARCHAR(255)
+);
+
+CREATE TABLE Tickets (
+    id_ticket INT AUTO_INCREMENT PRIMARY KEY,
+    titulo VARCHAR(150) NOT NULL,
+    descripcion TEXT NOT NULL,
+    estado VARCHAR(20) NOT NULL DEFAULT 'Abierto'
+        CHECK (estado IN ('Abierto', 'En_Progreso', 'Pendiente_Usuario', 'Resuelto', 'Cerrado')),
+    prioridad VARCHAR(10) NOT NULL
+        CHECK (prioridad IN ('Baja', 'Media', 'Alta', 'Critica')),
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    fecha_cierre TIMESTAMP NULL,
+    id_categoria INT NOT NULL,
+    usuario_creador INT NOT NULL,
+    tecnico_asignado INT NULL,
+    CONSTRAINT fk_tickets_categoria FOREIGN KEY (id_categoria)
+        REFERENCES Categorias (id_categoria)
+        ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT fk_tickets_usuario_creador FOREIGN KEY (usuario_creador)
+        REFERENCES Usuarios (id_usuario)
+        ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT fk_tickets_tecnico_asignado FOREIGN KEY (tecnico_asignado)
+        REFERENCES Usuarios (id_usuario)
+        ON UPDATE CASCADE ON DELETE SET NULL
+);
+
+CREATE TABLE Comentarios_Ticket (
+    id_comentario INT AUTO_INCREMENT PRIMARY KEY,
+    id_ticket INT NOT NULL,
+    id_usuario INT NOT NULL,
+    comentario TEXT NOT NULL,
+    fecha_comentario TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_comentarios_ticket FOREIGN KEY (id_ticket)
+        REFERENCES Tickets (id_ticket)
+        ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT fk_comentarios_usuario FOREIGN KEY (id_usuario)
+        REFERENCES Usuarios (id_usuario)
+        ON UPDATE CASCADE ON DELETE RESTRICT
+);
+
+INSERT INTO Usuarios (nombre_completo, email, password_hash, rol, departamento) VALUES
+('Marta Sánchez López', 'marta.sanchez@royaltown.local', '$2y$10$Qk1z8f5mR3xW7pLc9vNq1eS0bH4dY6tJ8uK2aF5gC7hM3nP9rT1Xa', 'empleado', 'Contabilidad'),
+('Javier Torres Ruiz', 'javier.torres@royaltown.local', '$2y$10$Nf3m9c2xL8pQw1rT6yU4vE0jH7dS5aK3gB9nM2cF1hR8tW6oP4Ybc', 'empleado', 'Recursos Humanos'),
+('Laura Gómez Martín', 'laura.gomez@royaltown.local', '$2y$10$Zp7q2w9eR4tY6uI1oA3sD5fG8hJ0kL2mN4bV6cX8zQ1wE3rT5yU7v', 'tecnico', 'Soporte IT'),
+('Diego Fernández Ibáñez', 'diego.fernandez@royaltown.local', '$2y$10$Ht5g8j1kL3mN6bV9cX2zQ4wE7rT0yU3iO5pA8sD1fG4hJ7kL0mN2q', 'tecnico', 'Soporte IT'),
+('Alejandro Ortiz Vega', 'alejandro.ortiz@royaltown.local', '$2y$10$Bx4c7v0zQ2wE5rT8yU1iO3pA6sD9fG1hJ4kL7mN0bV3cX6zQ9wE2rT', 'administrador', 'Sistemas');
+
+INSERT INTO Categorias (nombre, descripcion) VALUES
+('Hardware', 'Incidencias relacionadas con equipos físicos, periféricos y dispositivos de usuario.'),
+('Software', 'Instalación, actualización o fallos de aplicaciones y sistemas operativos.'),
+('Redes', 'Conectividad, VPN, Wi-Fi y acceso a recursos de red interna.'),
+('Accesos', 'Altas, bajas y permisos de usuario en sistemas y aplicaciones corporativas.'),
+('Correo y Comunicaciones', 'Incidencias de correo electrónico, calendario y herramientas de mensajería.');
+
+INSERT INTO Tickets (titulo, descripcion, estado, prioridad, fecha_creacion, fecha_cierre, id_categoria, usuario_creador, tecnico_asignado) VALUES
+('El ordenador no enciende tras el corte de luz', 'Tras el corte de luz de esta mañana, el equipo de sobremesa no responde al pulsar el botón de encendido. El piloto de red eléctrica está apagado.', 'Resuelto', 'Alta', '2026-09-02 08:15:00', '2026-09-02 11:40:00', 1, 1, 3),
+('No puedo conectarme a la VPN desde casa', 'Al intentar iniciar el cliente VPN desde el portátil corporativo, la conexión falla con un error de autenticación tras varios intentos.', 'En_Progreso', 'Alta', '2026-09-08 09:02:00', NULL, 3, 2, 4),
+('Solicito acceso a la carpeta compartida de Nóminas', 'Necesito acceso de lectura a la carpeta compartida de Nóminas para poder consultar los justificantes del mes en curso.', 'Pendiente_Usuario', 'Media', '2026-09-09 10:30:00', NULL, 4, 1, 3),
+('Outlook no sincroniza el correo desde ayer', 'El cliente de Outlook se queda cargando indefinidamente al intentar sincronizar la bandeja de entrada desde ayer por la tarde.', 'Abierto', 'Media', '2026-09-10 16:45:00', NULL, 5, 2, NULL),
+('La impresora de planta 2 no responde', 'La impresora compartida de la planta 2 aparece como desconectada para todos los usuarios de esa zona desde esta mañana.', 'Cerrado', 'Baja', '2026-09-05 09:20:00', '2026-09-05 12:10:00', 1, 5, 4);
+
+INSERT INTO Comentarios_Ticket (id_ticket, id_usuario, comentario, fecha_comentario) VALUES
+(1, 3, 'Revisado in situ. La fuente de alimentación se había dañado por el corte de luz. Sustituida y equipo operativo de nuevo.', '2026-09-02 11:15:00'),
+(1, 1, 'Confirmado, el equipo ya enciende con normalidad. Gracias por la rapidez.', '2026-09-02 11:38:00'),
+(2, 4, 'Revisado el certificado VPN del usuario, parece caducado. Generando uno nuevo y reenviando instrucciones de instalación.', '2026-09-08 12:20:00'),
+(3, 3, 'Pendiente de validación por parte del responsable de Nóminas antes de conceder el acceso solicitado.', '2026-09-09 13:05:00'),
+(5, 4, 'Cambiado el cable de red de la impresora y reiniciado el servicio de cola de impresión. Incidencia cerrada.', '2026-09-05 12:05:00');</code></pre>
+</div>
+</section>
+</main>
+
+<footer class="page-footer">
+<div class="container">
+<span>Simulador de Ticketing · Esquema relacional</span>
+</div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
