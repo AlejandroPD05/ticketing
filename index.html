@@ -1,261 +1,714 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Simulador de Ticketing — Esquema</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Helpdesk · Sistema de tickets — SQL + Java</title>
+  <meta name="description" content="Esquema MySQL completo para un helpdesk con ciclo de vida trazable, capa de servicios en Java con JDBC, CLI de demostración y pruebas JUnit sobre el mismo script.">
+
+  <!-- Pinta el tema claro antes del primer frame (como el portfolio) y lee
+       los parámetros ?motion=on|off sin esperar a los scripts del body -->
+  <script>
+    (function () {
+      document.documentElement.classList.add("light-mode");
+      var params = new URLSearchParams(window.location.search);
+      if (params.get("motion") === "on") {
+        document.documentElement.classList.add("force-motion");
+      } else if (params.get("motion") === "off") {
+        document.documentElement.classList.add("motion-off");
+      }
+    })();
+  </script>
+
+  <meta name="theme-color" content="#ffffff">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/effects.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js" defer></script>
 </head>
 <body>
 
-<header class="page-header">
-<div class="container">
-<span class="eyebrow">Backend · Java / SQL</span>
-<h1>Simulador de Ticketing</h1>
-<p class="subtitle">Esquema relacional para una aplicación de Helpdesk: usuarios, categorías, tickets y comentarios.</p>
-</div>
-</header>
+  <!-- ======================= Cabecera ======================= -->
+  <header class="site-header">
+    <div class="container">
+      <a class="site-brand" href="#">
+        <span class="brand-mark">⌘</span>
+        <span class="brand-text">helpdesk · RoyalTown</span>
+      </a>
 
-<main>
-<section class="schema-section">
-<div class="container">
-<h2 class="section-title">Modelo de datos</h2>
-<div class="schema-grid">
+      <nav class="site-nav" aria-label="Secciones">
+        <a href="#schema" data-i18n="nav.schema">Modelo de datos</a>
+        <a href="#er" data-i18n="nav.er">Diagrama ER</a>
+        <a href="#lifecycle" data-i18n="nav.lifecycle">Ciclo de vida</a>
+        <a href="#architecture" data-i18n="nav.architecture">Arquitectura</a>
+        <a href="#demo" data-i18n="nav.demo">Datos</a>
+        <a href="#sql" data-i18n="nav.sql">Script SQL</a>
+      </nav>
 
-<article class="table-card">
-<div class="table-card-head">
-<h3>Usuarios</h3>
-<span class="row-count">7 columnas</span>
-</div>
-<ul class="column-list">
-<li><span class="col-name">id_usuario</span><span class="col-type">INT</span><span class="col-tag tag-pk">PK</span></li>
-<li><span class="col-name">nombre_completo</span><span class="col-type">VARCHAR(100)</span></li>
-<li><span class="col-name">email</span><span class="col-type">VARCHAR(150)</span><span class="col-tag tag-unique">UNIQUE</span></li>
-<li><span class="col-name">password_hash</span><span class="col-type">VARCHAR(255)</span></li>
-<li><span class="col-name">rol</span><span class="col-type">empleado · tecnico · administrador</span></li>
-<li><span class="col-name">departamento</span><span class="col-type">VARCHAR(80)</span></li>
-<li><span class="col-name">fecha_alta</span><span class="col-type">TIMESTAMP</span></li>
-</ul>
-</article>
+      <div class="header-actions">
+        <button type="button" class="icon-toggle lang-toggle" data-lang-toggle aria-label="Cambiar idioma">
+          <span class="stack-layer lang-code-en" aria-hidden="true">EN</span>
+          <span class="stack-layer lang-code-es" aria-hidden="true">ES</span>
+        </button>
+        <button type="button" class="icon-toggle mode-toggle" data-theme-toggle aria-label="Cambiar tema" aria-pressed="false">
+          <span class="stack-layer icon-sun" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>
+          </span>
+          <span class="stack-layer icon-moon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 1020.354 15.354z"></path></svg>
+          </span>
+        </button>
+        <a class="icon-toggle" href="https://github.com/AlejandroPD05/ticketing" target="_blank" rel="noopener" aria-label="Repositorio en GitHub" data-i18n-label="repo.aria">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.55v-2.07c-3.2.7-3.87-1.4-3.87-1.4-.52-1.33-1.28-1.69-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.71 1.26 3.37.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 015.79 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.24 2.76.12 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.7 5.39-5.26 5.68.42.36.79 1.07.79 2.16v3.2c0 .31.21.67.8.55A11.51 11.51 0 0023.5 12C23.5 5.65 18.35.5 12 .5z"></path></svg>
+        </a>
+      </div>
+    </div>
+    <div class="scroll-progress" aria-hidden="true"><span></span></div>
+  </header>
 
-<article class="table-card">
-<div class="table-card-head">
-<h3>Categorias</h3>
-<span class="row-count">3 columnas</span>
-</div>
-<ul class="column-list">
-<li><span class="col-name">id_categoria</span><span class="col-type">INT</span><span class="col-tag tag-pk">PK</span></li>
-<li><span class="col-name">nombre</span><span class="col-type">VARCHAR(60)</span><span class="col-tag tag-unique">UNIQUE</span></li>
-<li><span class="col-name">descripcion</span><span class="col-type">VARCHAR(255)</span></li>
-</ul>
-</article>
+  <main>
 
-<article class="table-card table-card-featured">
-<div class="table-card-head">
-<h3>Tickets</h3>
-<span class="row-count">10 columnas</span>
-</div>
-<ul class="column-list">
-<li><span class="col-name">id_ticket</span><span class="col-type">INT</span><span class="col-tag tag-pk">PK</span></li>
-<li><span class="col-name">titulo</span><span class="col-type">VARCHAR(150)</span></li>
-<li><span class="col-name">descripcion</span><span class="col-type">TEXT</span></li>
-<li><span class="col-name">estado</span><span class="col-type">Abierto · En_Progreso · Pendiente_Usuario · Resuelto · Cerrado</span></li>
-<li><span class="col-name">prioridad</span><span class="col-type">Baja · Media · Alta · Critica</span></li>
-<li><span class="col-name">fecha_creacion</span><span class="col-type">TIMESTAMP</span></li>
-<li><span class="col-name">fecha_cierre</span><span class="col-type">TIMESTAMP (NULL)</span></li>
-<li><span class="col-name">id_categoria</span><span class="col-type">INT</span><span class="col-tag tag-fk">FK → Categorias</span></li>
-<li><span class="col-name">usuario_creador</span><span class="col-type">INT</span><span class="col-tag tag-fk">FK → Usuarios</span></li>
-<li><span class="col-name">tecnico_asignado</span><span class="col-type">INT (NULL)</span><span class="col-tag tag-fk">FK → Usuarios</span></li>
-</ul>
-</article>
+    <!-- ======================= Hero ======================= -->
+    <section class="hero">
+      <div class="container">
+        <div class="hero-inner">
+        <span class="eyebrow" data-reveal data-i18n="hero.eyebrow">Proyecto de portfolio · Helpdesk</span>
+        <h1 data-reveal data-scramble data-i18n="hero.title">Tickets con ciclo de vida trazable</h1>
+        <p class="subtitle" data-reveal data-i18n="hero.lead">
+          Esquema MySQL completo con 11 tablas, 4 vistas y una matriz de transiciones
+          validada en base de datos; capa de servicios en Java con JDBC y transacciones;
+          CLI de demostración por roles y 21 pruebas JUnit sobre el mismo script.
+        </p>
 
-<article class="table-card">
-<div class="table-card-head">
-<h3>Comentarios_Ticket</h3>
-<span class="row-count">5 columnas</span>
-</div>
-<ul class="column-list">
-<li><span class="col-name">id_comentario</span><span class="col-type">INT</span><span class="col-tag tag-pk">PK</span></li>
-<li><span class="col-name">id_ticket</span><span class="col-type">INT</span><span class="col-tag tag-fk">FK → Tickets</span></li>
-<li><span class="col-name">id_usuario</span><span class="col-type">INT</span><span class="col-tag tag-fk">FK → Usuarios</span></li>
-<li><span class="col-name">comentario</span><span class="col-type">TEXT</span></li>
-<li><span class="col-name">fecha_comentario</span><span class="col-type">TIMESTAMP</span></li>
-</ul>
-</article>
+        <div class="hero-actions" data-reveal>
+          <a class="btn btn-primary" href="#sql">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17l6-5-6-5"></path><path d="M12 19h8"></path></svg>
+            <span data-i18n="hero.cta.sql">Ver script SQL</span>
+          </a>
+          <a class="btn" href="https://github.com/AlejandroPD05/ticketing" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.55v-2.07c-3.2.7-3.87-1.4-3.87-1.4-.52-1.33-1.28-1.69-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.71 1.26 3.37.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 015.79 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.24 2.76.12 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.7 5.39-5.26 5.68.42.36.79 1.07.79 2.16v3.2c0 .31.21.67.8.55A11.51 11.51 0 0023.5 12C23.5 5.65 18.35.5 12 .5z"></path></svg>
+            <span data-i18n="hero.cta.github">Código en GitHub</span>
+          </a>
+        </div>
 
-</div>
-</div>
-</section>
+        <div class="hero-stats" data-reveal-group="stats">
+          <div class="hero-stat" data-reveal>
+            <strong data-count-to="11">11</strong>
+            <span data-i18n="hero.stat.tables">tablas</span>
+          </div>
+          <div class="hero-stat" data-reveal>
+            <strong data-count-to="4">4</strong>
+            <span data-i18n="hero.stat.views">vistas</span>
+          </div>
+          <div class="hero-stat" data-reveal>
+            <strong data-count-to="48">48</strong>
+            <span data-i18n="hero.stat.tickets">tickets de ejemplo</span>
+          </div>
+          <div class="hero-stat" data-reveal>
+            <strong data-count-to="21">21</strong>
+            <span data-i18n="hero.stat.tests">tests en verde</span>
+          </div>
+        </div>
+        </div><!-- /.hero-inner -->
+      </div>
+    </section>
 
-<section class="relations-section">
-<div class="container">
-<h2 class="section-title">Relaciones</h2>
-<ul class="relations-list">
-<li><span class="rel-from">Tickets.id_categoria</span><span class="rel-arrow">&#8594;</span><span class="rel-to">Categorias.id_categoria</span></li>
-<li><span class="rel-from">Tickets.usuario_creador</span><span class="rel-arrow">&#8594;</span><span class="rel-to">Usuarios.id_usuario</span></li>
-<li><span class="rel-from">Tickets.tecnico_asignado</span><span class="rel-arrow">&#8594;</span><span class="rel-to">Usuarios.id_usuario</span></li>
-<li><span class="rel-from">Comentarios_Ticket.id_ticket</span><span class="rel-arrow">&#8594;</span><span class="rel-to">Tickets.id_ticket</span></li>
-<li><span class="rel-from">Comentarios_Ticket.id_usuario</span><span class="rel-arrow">&#8594;</span><span class="rel-to">Usuarios.id_usuario</span></li>
-</ul>
-</div>
-</section>
+    <!-- ======================= Modelo de datos ======================= -->
+    <section id="schema">
+      <div class="container">
+        <h2 class="section-title" data-reveal data-scramble data-i18n="schema.title">Modelo de datos</h2>
+        <p class="section-lead" data-reveal data-i18n="schema.lead">
+          Nada de CHECK embebidos: roles, prioridades y estados son tablas lookup con
+          clave foránea, y Transiciones_Estado codifica en base de datos qué cambios de
+          estado son legales.
+        </p>
 
-<section class="sample-section">
-<div class="container">
-<h2 class="section-title">Datos de ejemplo</h2>
-<div class="table-scroll">
-<table class="sample-table">
-<thead>
-<tr>
-<th>Ticket</th>
-<th>Categoría</th>
-<th>Estado</th>
-<th>Prioridad</th>
-<th>Técnico</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>El ordenador no enciende tras el corte de luz</td>
-<td>Hardware</td>
-<td><span class="pill pill-resuelto">Resuelto</span></td>
-<td><span class="pill pill-alta">Alta</span></td>
-<td>Laura Gómez Martín</td>
-</tr>
-<tr>
-<td>No puedo conectarme a la VPN desde casa</td>
-<td>Redes</td>
-<td><span class="pill pill-progreso">En progreso</span></td>
-<td><span class="pill pill-alta">Alta</span></td>
-<td>Diego Fernández Ibáñez</td>
-</tr>
-<tr>
-<td>Solicito acceso a la carpeta compartida de Nóminas</td>
-<td>Accesos</td>
-<td><span class="pill pill-pendiente">Pendiente usuario</span></td>
-<td><span class="pill pill-media">Media</span></td>
-<td>Laura Gómez Martín</td>
-</tr>
-<tr>
-<td>Outlook no sincroniza el correo desde ayer</td>
-<td>Correo y Comunicaciones</td>
-<td><span class="pill pill-abierto">Abierto</span></td>
-<td><span class="pill pill-media">Media</span></td>
-<td class="muted">Sin asignar</td>
-</tr>
-<tr>
-<td>La impresora de planta 2 no responde</td>
-<td>Hardware</td>
-<td><span class="pill pill-cerrado">Cerrado</span></td>
-<td><span class="pill pill-baja">Baja</span></td>
-<td>Diego Fernández Ibáñez</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-</section>
+        <div class="schema-grid">
 
-<section class="script-section">
-<div class="container">
-<div class="script-head">
-<h2 class="section-title">Script SQL completo</h2>
-<button class="copy-btn" id="copyBtn">Copiar</button>
-</div>
-<pre class="sql-block"><code id="sqlCode">CREATE TABLE Usuarios (
-    id_usuario INT AUTO_INCREMENT PRIMARY KEY,
-    nombre_completo VARCHAR(100) NOT NULL,
-    email VARCHAR(150) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
-    rol VARCHAR(20) NOT NULL CHECK (rol IN ('empleado', 'tecnico', 'administrador')),
-    departamento VARCHAR(80),
-    fecha_alta TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+          <article class="table-card tiltable" data-reveal>
+            <div class="table-card-head">
+              <h3>Roles</h3>
+              <span class="row-count" data-i18n="schema.rows.lookup">lookup con FK</span>
+            </div>
+            <ul class="column-list">
+              <li><span class="col-name">id_rol</span><span class="col-type">INT AUTO_INCREMENT</span><span class="col-tag tag-pk">PK</span></li>
+              <li><span class="col-name">nombre</span><span class="col-type">VARCHAR(20)</span><span class="col-tag tag-unique">UNIQUE</span></li>
+            </ul>
+          </article>
 
-CREATE TABLE Categorias (
-    id_categoria INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(60) NOT NULL UNIQUE,
-    descripcion VARCHAR(255)
-);
+          <article class="table-card tiltable" data-reveal>
+            <div class="table-card-head">
+              <h3>Prioridades</h3>
+              <span class="row-count" data-i18n="schema.rows.lookup">lookup con FK</span>
+            </div>
+            <ul class="column-list">
+              <li><span class="col-name">id_prioridad</span><span class="col-type">INT AUTO_INCREMENT</span><span class="col-tag tag-pk">PK</span></li>
+              <li><span class="col-name">nombre</span><span class="col-type">VARCHAR(15)</span><span class="col-tag tag-unique">UNIQUE</span></li>
+              <li><span class="col-name">orden</span><span class="col-type">INT</span><span class="col-tag tag-unique">UNIQUE</span></li>
+              <li><span class="col-name">sla_horas</span><span class="col-type">INT</span><span class="col-tag tag-index">CHECK &gt; 0</span></li>
+            </ul>
+          </article>
 
-CREATE TABLE Tickets (
-    id_ticket INT AUTO_INCREMENT PRIMARY KEY,
-    titulo VARCHAR(150) NOT NULL,
-    descripcion TEXT NOT NULL,
-    estado VARCHAR(20) NOT NULL DEFAULT 'Abierto'
-        CHECK (estado IN ('Abierto', 'En_Progreso', 'Pendiente_Usuario', 'Resuelto', 'Cerrado')),
-    prioridad VARCHAR(10) NOT NULL
-        CHECK (prioridad IN ('Baja', 'Media', 'Alta', 'Critica')),
-    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    fecha_cierre TIMESTAMP NULL,
-    id_categoria INT NOT NULL,
-    usuario_creador INT NOT NULL,
-    tecnico_asignado INT NULL,
-    CONSTRAINT fk_tickets_categoria FOREIGN KEY (id_categoria)
-        REFERENCES Categorias (id_categoria)
-        ON UPDATE CASCADE ON DELETE RESTRICT,
-    CONSTRAINT fk_tickets_usuario_creador FOREIGN KEY (usuario_creador)
-        REFERENCES Usuarios (id_usuario)
-        ON UPDATE CASCADE ON DELETE RESTRICT,
-    CONSTRAINT fk_tickets_tecnico_asignado FOREIGN KEY (tecnico_asignado)
-        REFERENCES Usuarios (id_usuario)
-        ON UPDATE CASCADE ON DELETE SET NULL
-);
+          <article class="table-card tiltable" data-reveal>
+            <div class="table-card-head">
+              <h3>Estados</h3>
+              <span class="row-count" data-i18n="schema.rows.lookup">lookup con FK</span>
+            </div>
+            <ul class="column-list">
+              <li><span class="col-name">id_estado</span><span class="col-type">INT AUTO_INCREMENT</span><span class="col-tag tag-pk">PK</span></li>
+              <li><span class="col-name">nombre</span><span class="col-type">VARCHAR(25)</span><span class="col-tag tag-unique">UNIQUE</span></li>
+              <li><span class="col-name">orden</span><span class="col-type">INT</span><span class="col-tag tag-unique">UNIQUE</span></li>
+              <li><span class="col-name">es_final</span><span class="col-type">BOOLEAN</span><span class="col-tag tag-index">DEFAULT FALSE</span></li>
+            </ul>
+          </article>
 
-CREATE TABLE Comentarios_Ticket (
-    id_comentario INT AUTO_INCREMENT PRIMARY KEY,
-    id_ticket INT NOT NULL,
-    id_usuario INT NOT NULL,
-    comentario TEXT NOT NULL,
-    fecha_comentario TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_comentarios_ticket FOREIGN KEY (id_ticket)
-        REFERENCES Tickets (id_ticket)
-        ON UPDATE CASCADE ON DELETE CASCADE,
-    CONSTRAINT fk_comentarios_usuario FOREIGN KEY (id_usuario)
-        REFERENCES Usuarios (id_usuario)
-        ON UPDATE CASCADE ON DELETE RESTRICT
-);
+          <article class="table-card tiltable" data-reveal>
+            <div class="table-card-head">
+              <h3>Categorias</h3>
+              <span class="row-count" data-i18n="schema.rows.seed">filas en la semilla</span>
+            </div>
+            <ul class="column-list">
+              <li><span class="col-name">id_categoria</span><span class="col-type">INT AUTO_INCREMENT</span><span class="col-tag tag-pk">PK</span></li>
+              <li><span class="col-name">nombre</span><span class="col-type">VARCHAR(60)</span><span class="col-tag tag-unique">UNIQUE</span></li>
+              <li><span class="col-name">descripcion</span><span class="col-type">VARCHAR(255)</span></li>
+            </ul>
+          </article>
 
-INSERT INTO Usuarios (nombre_completo, email, password_hash, rol, departamento) VALUES
-('Marta Sánchez López', 'marta.sanchez@royaltown.local', '$2y$10$Qk1z8f5mR3xW7pLc9vNq1eS0bH4dY6tJ8uK2aF5gC7hM3nP9rT1Xa', 'empleado', 'Contabilidad'),
-('Javier Torres Ruiz', 'javier.torres@royaltown.local', '$2y$10$Nf3m9c2xL8pQw1rT6yU4vE0jH7dS5aK3gB9nM2cF1hR8tW6oP4Ybc', 'empleado', 'Recursos Humanos'),
-('Laura Gómez Martín', 'laura.gomez@royaltown.local', '$2y$10$Zp7q2w9eR4tY6uI1oA3sD5fG8hJ0kL2mN4bV6cX8zQ1wE3rT5yU7v', 'tecnico', 'Soporte IT'),
-('Diego Fernández Ibáñez', 'diego.fernandez@royaltown.local', '$2y$10$Ht5g8j1kL3mN6bV9cX2zQ4wE7rT0yU3iO5pA8sD1fG4hJ7kL0mN2q', 'tecnico', 'Soporte IT'),
-('Alejandro Ortiz Vega', 'alejandro.ortiz@royaltown.local', '$2y$10$Bx4c7v0zQ2wE5rT8yU1iO3pA6sD9fG1hJ4kL7mN0bV3cX6zQ9wE2rT', 'administrador', 'Sistemas');
+          <article class="table-card tiltable" data-reveal>
+            <div class="table-card-head">
+              <h3>Usuarios</h3>
+              <span class="row-count" data-i18n="schema.rows.seed">filas en la semilla</span>
+            </div>
+            <ul class="column-list">
+              <li><span class="col-name">id_usuario</span><span class="col-type">INT AUTO_INCREMENT</span><span class="col-tag tag-pk">PK</span></li>
+              <li><span class="col-name">nombre_completo</span><span class="col-type">VARCHAR(100)</span></li>
+              <li><span class="col-name">email</span><span class="col-type">VARCHAR(150)</span><span class="col-tag tag-unique">UNIQUE</span></li>
+              <li><span class="col-name">password_hash</span><span class="col-type">VARCHAR(255)</span><span class="col-tag tag-index">bcrypt $2a$</span></li>
+              <li><span class="col-name">id_rol</span><span class="col-type">INT</span><span class="col-tag tag-fk">FK → Roles</span></li>
+              <li><span class="col-name">departamento</span><span class="col-type">VARCHAR(80)</span></li>
+              <li><span class="col-name">activo</span><span class="col-type">BOOLEAN</span><span class="col-tag tag-index">DEFAULT TRUE</span></li>
+              <li><span class="col-name">fecha_alta</span><span class="col-type">TIMESTAMP</span></li>
+            </ul>
+          </article>
 
-INSERT INTO Categorias (nombre, descripcion) VALUES
-('Hardware', 'Incidencias relacionadas con equipos físicos, periféricos y dispositivos de usuario.'),
-('Software', 'Instalación, actualización o fallos de aplicaciones y sistemas operativos.'),
-('Redes', 'Conectividad, VPN, Wi-Fi y acceso a recursos de red interna.'),
-('Accesos', 'Altas, bajas y permisos de usuario en sistemas y aplicaciones corporativas.'),
-('Correo y Comunicaciones', 'Incidencias de correo electrónico, calendario y herramientas de mensajería.');
+          <article class="table-card tiltable" data-reveal>
+            <div class="table-card-head">
+              <h3>Transiciones_Estado</h3>
+              <span class="row-count">10 aristas</span>
+            </div>
+            <ul class="column-list">
+              <li><span class="col-name">id_transicion</span><span class="col-type">INT AUTO_INCREMENT</span><span class="col-tag tag-pk">PK</span></li>
+              <li><span class="col-name">id_estado_origen</span><span class="col-type">INT</span><span class="col-tag tag-fk">FK → Estados</span></li>
+              <li><span class="col-name">id_estado_destino</span><span class="col-type">INT</span><span class="col-tag tag-fk">FK → Estados</span></li>
+              <li><span class="col-name">(origen, destino)</span><span class="col-type">par</span><span class="col-tag tag-unique">UNIQUE</span><span class="col-tag tag-index">CHECK origen ≠ destino</span></li>
+            </ul>
+          </article>
 
-INSERT INTO Tickets (titulo, descripcion, estado, prioridad, fecha_creacion, fecha_cierre, id_categoria, usuario_creador, tecnico_asignado) VALUES
-('El ordenador no enciende tras el corte de luz', 'Tras el corte de luz de esta mañana, el equipo de sobremesa no responde al pulsar el botón de encendido. El piloto de red eléctrica está apagado.', 'Resuelto', 'Alta', '2026-09-02 08:15:00', '2026-09-02 11:40:00', 1, 1, 3),
-('No puedo conectarme a la VPN desde casa', 'Al intentar iniciar el cliente VPN desde el portátil corporativo, la conexión falla con un error de autenticación tras varios intentos.', 'En_Progreso', 'Alta', '2026-09-08 09:02:00', NULL, 3, 2, 4),
-('Solicito acceso a la carpeta compartida de Nóminas', 'Necesito acceso de lectura a la carpeta compartida de Nóminas para poder consultar los justificantes del mes en curso.', 'Pendiente_Usuario', 'Media', '2026-09-09 10:30:00', NULL, 4, 1, 3),
-('Outlook no sincroniza el correo desde ayer', 'El cliente de Outlook se queda cargando indefinidamente al intentar sincronizar la bandeja de entrada desde ayer por la tarde.', 'Abierto', 'Media', '2026-09-10 16:45:00', NULL, 5, 2, NULL),
-('La impresora de planta 2 no responde', 'La impresora compartida de la planta 2 aparece como desconectada para todos los usuarios de esa zona desde esta mañana.', 'Cerrado', 'Baja', '2026-09-05 09:20:00', '2026-09-05 12:10:00', 1, 5, 4);
+          <article class="table-card table-card-featured tiltable" data-reveal>
+            <div class="table-card-head">
+              <h3>Tickets</h3>
+              <span class="row-count" data-i18n="schema.rows.seed">filas en la semilla</span>
+            </div>
+            <ul class="column-list">
+              <li><span class="col-name">id_ticket</span><span class="col-type">INT AUTO_INCREMENT</span><span class="col-tag tag-pk">PK</span></li>
+              <li><span class="col-name">titulo</span><span class="col-type">VARCHAR(150)</span></li>
+              <li><span class="col-name">descripcion</span><span class="col-type">TEXT</span></li>
+              <li><span class="col-name">id_estado</span><span class="col-type">INT</span><span class="col-tag tag-fk">FK → Estados</span><span class="col-tag tag-index">índice compuesto</span></li>
+              <li><span class="col-name">id_prioridad</span><span class="col-type">INT</span><span class="col-tag tag-fk">FK → Prioridades</span></li>
+              <li><span class="col-name">fecha_creacion</span><span class="col-type">TIMESTAMP</span><span class="col-tag tag-index">índice</span></li>
+              <li><span class="col-name">fecha_limite</span><span class="col-type">TIMESTAMP</span><span class="col-tag tag-index">índice · creación + SLA</span></li>
+              <li><span class="col-name">fecha_cierre</span><span class="col-type">TIMESTAMP NULL</span><span class="col-tag tag-index">CHECK ≥ creación</span></li>
+              <li><span class="col-name">id_categoria</span><span class="col-type">INT</span><span class="col-tag tag-fk">FK → Categorias</span></li>
+              <li><span class="col-name">usuario_creador</span><span class="col-type">INT</span><span class="col-tag tag-fk">FK → Usuarios</span></li>
+              <li><span class="col-name">tecnico_asignado</span><span class="col-type">INT NULL</span><span class="col-tag tag-fk">FK → Usuarios · SET NULL</span></li>
+            </ul>
+          </article>
 
-INSERT INTO Comentarios_Ticket (id_ticket, id_usuario, comentario, fecha_comentario) VALUES
-(1, 3, 'Revisado in situ. La fuente de alimentación se había dañado por el corte de luz. Sustituida y equipo operativo de nuevo.', '2026-09-02 11:15:00'),
-(1, 1, 'Confirmado, el equipo ya enciende con normalidad. Gracias por la rapidez.', '2026-09-02 11:38:00'),
-(2, 4, 'Revisado el certificado VPN del usuario, parece caducado. Generando uno nuevo y reenviando instrucciones de instalación.', '2026-09-08 12:20:00'),
-(3, 3, 'Pendiente de validación por parte del responsable de Nóminas antes de conceder el acceso solicitado.', '2026-09-09 13:05:00'),
-(5, 4, 'Cambiado el cable de red de la impresora y reiniciado el servicio de cola de impresión. Incidencia cerrada.', '2026-09-05 12:05:00');</code></pre>
-</div>
-</section>
-</main>
+          <article class="table-card tiltable" data-reveal>
+            <div class="table-card-head">
+              <h3>Historial_Ticket</h3>
+              <span class="row-count">trazabilidad</span>
+            </div>
+            <ul class="column-list">
+              <li><span class="col-name">id_historico</span><span class="col-type">INT AUTO_INCREMENT</span><span class="col-tag tag-pk">PK</span></li>
+              <li><span class="col-name">id_ticket</span><span class="col-type">INT</span><span class="col-tag tag-fk">FK · ON DELETE CASCADE</span></li>
+              <li><span class="col-name">id_usuario</span><span class="col-type">INT</span><span class="col-tag tag-fk">FK → Usuarios</span></li>
+              <li><span class="col-name">campo</span><span class="col-type">VARCHAR(30)</span></li>
+              <li><span class="col-name">valor_anterior</span><span class="col-type">VARCHAR(255) NULL</span></li>
+              <li><span class="col-name">valor_nuevo</span><span class="col-type">VARCHAR(255)</span></li>
+              <li><span class="col-name">fecha_cambio</span><span class="col-type">TIMESTAMP</span></li>
+            </ul>
+          </article>
 
-<footer class="page-footer">
-<div class="container">
-<span>Simulador de Ticketing · Esquema relacional</span>
-</div>
-</footer>
+          <article class="table-card tiltable" data-reveal>
+            <div class="table-card-head">
+              <h3>Comentarios_Ticket</h3>
+              <span class="row-count">hilo + notas internas</span>
+            </div>
+            <ul class="column-list">
+              <li><span class="col-name">id_comentario</span><span class="col-type">INT AUTO_INCREMENT</span><span class="col-tag tag-pk">PK</span></li>
+              <li><span class="col-name">id_ticket</span><span class="col-type">INT</span><span class="col-tag tag-fk">FK · CASCADE</span></li>
+              <li><span class="col-name">id_usuario</span><span class="col-type">INT</span><span class="col-tag tag-fk">FK → Usuarios</span></li>
+              <li><span class="col-name">comentario</span><span class="col-type">TEXT</span></li>
+              <li><span class="col-name">es_interno</span><span class="col-type">BOOLEAN</span><span class="col-tag tag-index">DEFAULT FALSE</span></li>
+              <li><span class="col-name">fecha_comentario</span><span class="col-type">TIMESTAMP</span></li>
+            </ul>
+          </article>
 
-<script src="script.js"></script>
+          <article class="table-card tiltable" data-reveal>
+            <div class="table-card-head">
+              <h3>Adjuntos_Ticket</h3>
+              <span class="row-count">evidencias</span>
+            </div>
+            <ul class="column-list">
+              <li><span class="col-name">id_adjunto</span><span class="col-type">INT AUTO_INCREMENT</span><span class="col-tag tag-pk">PK</span></li>
+              <li><span class="col-name">id_ticket</span><span class="col-type">INT</span><span class="col-tag tag-fk">FK · CASCADE</span></li>
+              <li><span class="col-name">nombre_archivo</span><span class="col-type">VARCHAR(180)</span></li>
+              <li><span class="col-name">ruta</span><span class="col-type">VARCHAR(255)</span></li>
+              <li><span class="col-name">tamano_kb</span><span class="col-type">INT</span><span class="col-tag tag-index">CHECK &gt; 0</span></li>
+              <li><span class="col-name">fecha_subida</span><span class="col-type">TIMESTAMP</span></li>
+            </ul>
+          </article>
+
+          <article class="table-card tiltable" data-reveal>
+            <div class="table-card-head">
+              <h3>Valoraciones</h3>
+              <span class="row-count">1 por ticket</span>
+            </div>
+            <ul class="column-list">
+              <li><span class="col-name">id_valoracion</span><span class="col-type">INT AUTO_INCREMENT</span><span class="col-tag tag-pk">PK</span></li>
+              <li><span class="col-name">id_ticket</span><span class="col-type">INT</span><span class="col-tag tag-fk">FK · CASCADE</span><span class="col-tag tag-unique">UNIQUE</span></li>
+              <li><span class="col-name">puntuacion</span><span class="col-type">TINYINT</span><span class="col-tag tag-index">CHECK 1–5</span></li>
+              <li><span class="col-name">comentario</span><span class="col-type">VARCHAR(255) NULL</span></li>
+              <li><span class="col-name">fecha_valoracion</span><span class="col-type">TIMESTAMP</span></li>
+            </ul>
+          </article>
+
+          <article class="table-card tiltable" data-reveal>
+            <div class="table-card-head">
+              <h3>Índices</h3>
+              <span class="row-count">7</span>
+            </div>
+            <ul class="column-list">
+              <li><span class="col-name">idx_tickets_estado_prioridad</span><span class="col-type">(id_estado, id_prioridad)</span><span class="col-tag tag-index">IDX</span></li>
+              <li><span class="col-name">idx_tickets_creador</span><span class="col-type">(usuario_creador)</span><span class="col-tag tag-index">IDX</span></li>
+              <li><span class="col-name">idx_tickets_tecnico</span><span class="col-type">(tecnico_asignado)</span><span class="col-tag tag-index">IDX</span></li>
+              <li><span class="col-name">idx_tickets_fecha_creacion</span><span class="col-type">(fecha_creacion)</span><span class="col-tag tag-index">IDX</span></li>
+              <li><span class="col-name">idx_tickets_fecha_limite</span><span class="col-type">(fecha_limite)</span><span class="col-tag tag-index">IDX</span></li>
+              <li><span class="col-name">idx_comentarios_ticket</span><span class="col-type">(id_ticket)</span><span class="col-tag tag-index">IDX</span></li>
+              <li><span class="col-name">idx_historial_ticket</span><span class="col-type">(id_ticket)</span><span class="col-tag tag-index">IDX</span></li>
+            </ul>
+          </article>
+
+          <article class="table-card table-card-view tiltable" data-reveal>
+            <div class="table-card-head">
+              <h3>vw_tickets_abiertos</h3>
+              <span class="row-count" data-i18n="schema.rows.vista">KPI calculado en BD</span>
+            </div>
+            <ul class="column-list">
+              <li><span class="col-name">id_ticket · titulo</span><span class="col-type">identifica la cola</span></li>
+              <li><span class="col-name">categoria · prioridad · estado</span><span class="col-type">dimensiones</span></li>
+              <li><span class="col-name">tecnico</span><span class="col-type">LEFT JOIN, «Sin asignar»</span></li>
+              <li><span class="col-name">fecha_creacion · fecha_limite</span><span class="col-type">orden de la cola</span></li>
+            </ul>
+          </article>
+
+          <article class="table-card table-card-view tiltable" data-reveal>
+            <div class="table-card-head">
+              <h3>vw_sla_incumplido</h3>
+              <span class="row-count" data-i18n="schema.rows.vista">KPI calculado en BD</span>
+            </div>
+            <ul class="column-list">
+              <li><span class="col-name">id_ticket · titulo</span><span class="col-type">incumplimiento</span></li>
+              <li><span class="col-name">prioridad · sla_horas</span><span class="col-type">plazo comprometido</span></li>
+              <li><span class="col-name">fecha_creacion · fecha_limite</span><span class="col-type">reloj</span></li>
+              <li><span class="col-name">tecnico</span><span class="col-type">responsable</span></li>
+            </ul>
+          </article>
+
+          <article class="table-card table-card-view tiltable" data-reveal>
+            <div class="table-card-head">
+              <h3>vw_resolucion_por_tecnico</h3>
+              <span class="row-count" data-i18n="schema.rows.vista">KPI calculado en BD</span>
+            </div>
+            <ul class="column-list">
+              <li><span class="col-name">id_usuario · nombre_completo</span><span class="col-type">técnico</span></li>
+              <li><span class="col-name">tickets_resueltos</span><span class="col-type">COUNT con cierre</span></li>
+              <li><span class="col-name">minutos_medios</span><span class="col-type">AVG(TIMESTAMPDIFF) creación → cierre</span></li>
+            </ul>
+          </article>
+
+          <article class="table-card table-card-view tiltable" data-reveal>
+            <div class="table-card-head">
+              <h3>vw_tickets_por_estado</h3>
+              <span class="row-count" data-i18n="schema.rows.vista">KPI calculado en BD</span>
+            </div>
+            <ul class="column-list">
+              <li><span class="col-name">id_estado · nombre · orden</span><span class="col-type">ciclo de vida</span></li>
+              <li><span class="col-name">total</span><span class="col-type">COUNT LEFT JOIN, incluye estados a 0</span></li>
+            </ul>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= Diagrama ER ======================= -->
+    <section id="er">
+      <div class="container">
+        <h2 class="section-title" data-reveal data-scramble data-i18n="er.title">Diagrama entidad-relación</h2>
+        <p class="section-lead" data-reveal data-i18n="er.lead">
+          Claves primarias, foráneas y cardinalidades de las once tablas.
+        </p>
+
+        <div class="er-frame" data-reveal>
+          <p class="er-fallback" data-i18n="er.fallback">
+            El diagrama necesita red para cargar Mermaid; las relaciones completas
+            están en la lista siguiente.
+          </p>
+          <pre class="mermaid">
+erDiagram
+    ROLES ||--o{ USUARIOS : "id_rol"
+    PRIORIDADES ||--o{ TICKETS : "id_prioridad"
+    ESTADOS ||--o{ TICKETS : "id_estado"
+    ESTADOS ||--o{ TRANSICIONES_ESTADO : "origen"
+    ESTADOS ||--o{ TRANSICIONES_ESTADO : "destino"
+    CATEGORIAS ||--o{ TICKETS : "id_categoria"
+    USUARIOS ||--o{ TICKETS : "usuario_creador"
+    USUARIOS ||--o{ TICKETS : "tecnico_asignado"
+    TICKETS ||--o{ COMENTARIOS_TICKET : "id_ticket"
+    TICKETS ||--o{ HISTORIAL_TICKET : "id_ticket"
+    TICKETS ||--o{ ADJUNTOS_TICKET : "id_ticket"
+    TICKETS ||--o| VALORACIONES : "id_ticket"
+    USUARIOS ||--o{ HISTORIAL_TICKET : "id_usuario"
+    USUARIOS ||--o{ COMENTARIOS_TICKET : "id_usuario"
+          </pre>
+        </div>
+
+        <ul class="relations-list" data-reveal style="margin-top: var(--space-6);">
+          <li><span class="rel-from">Roles</span><span class="rel-arrow">1 ─ ∞</span><span class="rel-to">Usuarios · id_rol (RESTRICT)</span></li>
+          <li><span class="rel-from">Prioridades</span><span class="rel-arrow">1 ─ ∞</span><span class="rel-to">Tickets · id_prioridad (RESTRICT)</span></li>
+          <li><span class="rel-from">Estados</span><span class="rel-arrow">1 ─ ∞</span><span class="rel-to">Tickets · id_estado (RESTRICT)</span></li>
+          <li><span class="rel-from">Estados</span><span class="rel-arrow">1 ─ ∞</span><span class="rel-to">Transiciones_Estado · origen y destino (CASCADE)</span></li>
+          <li><span class="rel-from">Categorias</span><span class="rel-arrow">1 ─ ∞</span><span class="rel-to">Tickets · id_categoria (RESTRICT)</span></li>
+          <li><span class="rel-from">Usuarios</span><span class="rel-arrow">1 ─ ∞</span><span class="rel-to">Tickets · usuario_creador (RESTRICT)</span></li>
+          <li><span class="rel-from">Usuarios</span><span class="rel-arrow">1 ─ ∞</span><span class="rel-to">Tickets · tecnico_asignado (SET NULL)</span></li>
+          <li><span class="rel-from">Tickets</span><span class="rel-arrow">1 ─ ∞</span><span class="rel-to">Comentarios_Ticket (CASCADE)</span></li>
+          <li><span class="rel-from">Tickets</span><span class="rel-arrow">1 ─ ∞</span><span class="rel-to">Historial_Ticket (CASCADE)</span></li>
+          <li><span class="rel-from">Tickets</span><span class="rel-arrow">1 ─ ∞</span><span class="rel-to">Adjuntos_Ticket (CASCADE)</span></li>
+          <li><span class="rel-from">Tickets</span><span class="rel-arrow">1 ─ 1</span><span class="rel-to">Valoraciones · UNIQUE (CASCADE)</span></li>
+          <li><span class="rel-from">Usuarios</span><span class="rel-arrow">1 ─ ∞</span><span class="rel-to">Historial_Ticket y Comentarios_Ticket · autor</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ======================= Ciclo de vida ======================= -->
+    <section id="lifecycle">
+      <div class="container">
+        <h2 class="section-title" data-reveal data-scramble data-i18n="lifecycle.title">Ciclo de vida del ticket</h2>
+        <p class="section-lead" data-reveal data-i18n="lifecycle.lead">
+          Diez transiciones permitidas, validadas por la capa de servicios contra el
+          catálogo en memoria.
+        </p>
+
+        <div class="lifecycle" data-reveal>
+          <div class="lifecycle-node">
+            <strong>Abierto</strong>
+            <small data-i18n="lc.abierto.desc">Recién creado, en cola</small>
+          </div>
+          <span class="lifecycle-arrow">→</span>
+          <div class="lifecycle-node">
+            <strong>En_Progreso</strong>
+            <small data-i18n="lc.progreso.desc">En manos de un técnico</small>
+          </div>
+          <span class="lifecycle-arrow">⇄</span>
+          <div class="lifecycle-node">
+            <strong>Pendiente_Usuario</strong>
+            <small data-i18n="lc.pendiente.desc">Esperando al usuario</small>
+          </div>
+          <span class="lifecycle-arrow">→</span>
+          <div class="lifecycle-node">
+            <strong>Resuelto</strong>
+            <small data-i18n="lc.resuelto.desc">Solución aplicada, fija cierre</small>
+          </div>
+          <span class="lifecycle-arrow">→</span>
+          <div class="lifecycle-node">
+            <strong>Cerrado</strong>
+            <small data-i18n="lc.cerrado.desc">Confirmado por el usuario</small>
+          </div>
+          <span class="lifecycle-arrow">⇄</span>
+          <div class="lifecycle-node">
+            <strong>Reapertura</strong>
+            <small>→ En_Progreso · borra fecha_cierre</small>
+          </div>
+        </div>
+
+        <div class="table-scroll" data-reveal>
+          <table class="transition-table">
+            <thead>
+              <tr>
+                <th data-i18n="lc.th.origen">Origen</th>
+                <th data-i18n="lc.th.destino">Destino</th>
+                <th data-i18n="lc.th.quien">Quién lo ejecuta</th>
+                <th data-i18n="lc.th.motivo">Motivo</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="pill pill-abierto">Abierto</span></td>
+                <td><span class="pill pill-progreso">En_Progreso</span></td>
+                <td data-i18n="lc.who.soporte">Técnico / admin</td>
+                <td data-i18n="lc.motivo.cargo">El técnico se hace cargo</td>
+              </tr>
+              <tr>
+                <td><span class="pill pill-abierto">Abierto</span></td>
+                <td><span class="pill pill-pendiente">Pendiente_Usuario</span></td>
+                <td data-i18n="lc.who.soporte">Técnico / admin</td>
+                <td data-i18n="lc.motivo.pide">Se pide aclaración al reportero</td>
+              </tr>
+              <tr>
+                <td><span class="pill pill-progreso">En_Progreso</span></td>
+                <td><span class="pill pill-abierto">Abierto</span></td>
+                <td data-i18n="lc.who.soporte">Técnico / admin</td>
+                <td data-i18n="lc.motivo.cola">Se devuelve a la cola</td>
+              </tr>
+              <tr>
+                <td><span class="pill pill-progreso">En_Progreso</span></td>
+                <td><span class="pill pill-pendiente">Pendiente_Usuario</span></td>
+                <td data-i18n="lc.who.soporte">Técnico / admin</td>
+                <td data-i18n="lc.motivo.falta">Falta información del usuario</td>
+              </tr>
+              <tr>
+                <td><span class="pill pill-progreso">En_Progreso</span></td>
+                <td><span class="pill pill-resuelto">Resuelto</span></td>
+                <td data-i18n="lc.who.soporte">Técnico / admin</td>
+                <td data-i18n="lc.motivo.resuelve">Incidencia solucionada: empieza el reloj de resolución</td>
+              </tr>
+              <tr>
+                <td><span class="pill pill-pendiente">Pendiente_Usuario</span></td>
+                <td><span class="pill pill-progreso">En_Progreso</span></td>
+                <td data-i18n="lc.who.soporte">Técnico / admin</td>
+                <td data-i18n="lc.motivo.responde">El usuario responde</td>
+              </tr>
+              <tr>
+                <td><span class="pill pill-pendiente">Pendiente_Usuario</span></td>
+                <td><span class="pill pill-abierto">Abierto</span></td>
+                <td data-i18n="lc.who.soporte">Técnico / admin</td>
+                <td data-i18n="lc.motivo.reinicia">Se reinicia la indagación</td>
+              </tr>
+              <tr>
+                <td><span class="pill pill-resuelto">Resuelto</span></td>
+                <td><span class="pill pill-cerrado">Cerrado</span></td>
+                <td data-i18n="lc.who.usuario">Usuario creador</td>
+                <td data-i18n="lc.motivo.confirma">El usuario confirma la solución</td>
+              </tr>
+              <tr>
+                <td><span class="pill pill-resuelto">Resuelto</span></td>
+                <td><span class="pill pill-progreso">En_Progreso</span></td>
+                <td data-i18n="lc.who.soporte">Técnico / admin</td>
+                <td data-i18n="lc.motivo.reabre">Reapertura: no era la solución</td>
+              </tr>
+              <tr>
+                <td><span class="pill pill-cerrado">Cerrado</span></td>
+                <td><span class="pill pill-progreso">En_Progreso</span></td>
+                <td data-i18n="lc.who.soporte">Técnico / admin</td>
+                <td data-i18n="lc.motivo.tardia">Reapertura tardía por soporte</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= Arquitectura ======================= -->
+    <section id="architecture">
+      <div class="container">
+        <h2 class="section-title" data-reveal data-scramble data-i18n="arq.title">Arquitectura Java</h2>
+        <p class="section-lead" data-reveal data-i18n="arq.lead">
+          JDBC sin framework: la CLI no contiene SQL ni reglas de negocio.
+        </p>
+
+        <div class="layers">
+          <div class="layer" data-reveal>
+            <h3 data-i18n="arq.cli.name">CLI</h3>
+            <p data-i18n="arq.cli.desc">Menús por rol para crear, asignar, transicionar, comentar, valorar y consultar informes.</p>
+          </div>
+          <div class="layer" data-reveal>
+            <h3 data-i18n="arq.service.name">Servicios</h3>
+            <p data-i18n="arq.service.desc">TicketService concentra permisos, máquina de estados, SLA y auditoría.</p>
+          </div>
+          <div class="layer" data-reveal>
+            <h3 data-i18n="arq.dao.name">DAO / JDBC</h3>
+            <p data-i18n="arq.dao.desc">Patrón unit-of-work: los escritos reciben la Connection abierta; las lecturas abren la suya.</p>
+          </div>
+          <div class="layer" data-reveal>
+            <h3 data-i18n="arq.db.name">MySQL 8</h3>
+            <p data-i18n="arq.db.desc">Vistas para los KPIs, índices sobre las búsquedas calientes y constraints a nivel de datos.</p>
+          </div>
+        </div>
+
+        <h3 class="section-title" style="font-size: var(--fs-h3); margin-top: var(--space-6);" data-reveal data-i18n="arq.packages">Paquetes</h3>
+        <ul class="relations-list" data-reveal>
+          <li><span class="rel-from">com.royaltown.helpdesk.model</span><span class="rel-arrow">—</span><span class="rel-to">Ticket, Usuario, Estado, Prioridad y Catálogo: registros inmutables</span></li>
+          <li><span class="rel-from">com.royaltown.helpdesk.dao</span><span class="rel-arrow">—</span><span class="rel-to">TicketDao, HistorialDao, ReporteDao… PreparedStatement y unit of work</span></li>
+          <li><span class="rel-from">com.royaltown.helpdesk.service</span><span class="rel-arrow">—</span><span class="rel-to">TicketService, AuthService, ReporteService y CatalogoService</span></li>
+          <li><span class="rel-from">com.royaltown.helpdesk.cli</span><span class="rel-arrow">—</span><span class="rel-to">Main y Consola: menús por rol, tablas alineadas, captura de excepciones</span></li>
+          <li><span class="rel-from">com.royaltown.helpdesk.util</span><span class="rel-arrow">—</span><span class="rel-to">ConexionDB, PasswordHash (bcrypt) y Transaccion (todo o nada)</span></li>
+          <li><span class="rel-from">com.royaltown.helpdesk.exception</span><span class="rel-arrow">—</span><span class="rel-to">HelpdeskException: violaciones de regla de negocio</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ======================= Datos de ejemplo ======================= -->
+    <section id="demo">
+      <div class="container">
+        <h2 class="section-title" data-reveal data-scramble data-i18n="datos.title">Datos de ejemplo</h2>
+        <p class="section-lead" data-reveal data-i18n="datos.lead">
+          48 tickets generados con ciclo de vida coherente por tools/seed_generator.py.
+        </p>
+        <p class="sql-note" data-reveal style="margin-top: calc(var(--space-6) * -1); margin-bottom: var(--space-6);" data-i18n="datos.credentials">
+          Demo: cualquier usuario de la semilla entra con la contraseña royaltown2026.
+        </p>
+
+        <div class="table-scroll" data-reveal>
+          <table class="sample-table">
+            <caption class="sql-note" style="text-align: left; padding: 10px 16px;" data-i18n="datos.muestra">Muestra de la tabla Tickets</caption>
+            <thead>
+              <tr>
+                <th data-i18n="datos.th.id">ID</th>
+                <th data-i18n="datos.th.titulo">Título</th>
+                <th data-i18n="datos.th.cat">Categoría</th>
+                <th data-i18n="datos.th.prio">Prioridad</th>
+                <th data-i18n="datos.th.estado">Estado</th>
+                <th data-i18n="datos.th.tecnico">Técnico</th>
+                <th data-i18n="datos.th.fecha">Creación</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="muted">#1</td>
+                <td>Permiso de solo lectura en el compartido de Calidad</td>
+                <td class="muted">Accesos</td>
+                <td><span class="pill pill-critica">Crítica</span></td>
+                <td><span class="pill pill-cerrado">Cerrado</span></td>
+                <td class="muted">Diego Fernández</td>
+                <td class="muted">08/09/2026</td>
+              </tr>
+              <tr>
+                <td class="muted">#2</td>
+                <td>Firma corporativa desaparece de los mensajes</td>
+                <td class="muted">Correo y Comunicaciones</td>
+                <td><span class="pill pill-alta">Alta</span></td>
+                <td><span class="pill pill-pendiente">Pendiente_Usuario</span></td>
+                <td class="muted">Diego Fernández</td>
+                <td class="muted">11/09/2026</td>
+              </tr>
+              <tr>
+                <td class="muted">#4</td>
+                <td>Sincronización de agenda con móvil detenida</td>
+                <td class="muted">Software</td>
+                <td><span class="pill pill-media">Media</span></td>
+                <td><span class="pill pill-resuelto">Resuelto</span></td>
+                <td class="muted">Laura Gómez</td>
+                <td class="muted">15/09/2026</td>
+              </tr>
+              <tr>
+                <td class="muted">#6</td>
+                <td>Restaurar acceso tras la baja por vacaciones</td>
+                <td class="muted">Accesos</td>
+                <td><span class="pill pill-media">Media</span></td>
+                <td><span class="pill pill-progreso">En_Progreso</span></td>
+                <td class="muted">Diego Fernández</td>
+                <td class="muted">10/10/2026</td>
+              </tr>
+              <tr>
+                <td class="muted">#8</td>
+                <td>El programa de contabilidad pide activarse cada día</td>
+                <td class="muted">Software</td>
+                <td><span class="pill pill-alta">Alta</span></td>
+                <td><span class="pill pill-abierto">Abierto</span></td>
+                <td class="muted">—</td>
+                <td class="muted">11/10/2026</td>
+              </tr>
+              <tr>
+                <td class="muted">#10</td>
+                <td>Sin permisos para validar anticipos</td>
+                <td class="muted">Accesos</td>
+                <td><span class="pill pill-baja">Baja</span></td>
+                <td><span class="pill pill-pendiente">Pendiente_Usuario</span></td>
+                <td class="muted">Laura Gómez</td>
+                <td class="muted">10/10/2026</td>
+              </tr>
+              <tr>
+                <td class="muted">#3</td>
+                <td>El ventilador del equipo hace mucho ruido</td>
+                <td class="muted">Hardware</td>
+                <td><span class="pill pill-media">Media</span></td>
+                <td><span class="pill pill-cerrado">Cerrado</span></td>
+                <td class="muted">Laura Gómez</td>
+                <td class="muted">01/10/2026</td>
+              </tr>
+              <tr>
+                <td class="muted">#5</td>
+                <td>Monitor con líneas verticales después de un golpe</td>
+                <td class="muted">Hardware</td>
+                <td><span class="pill pill-baja">Baja</span></td>
+                <td><span class="pill pill-cerrado">Cerrado</span></td>
+                <td class="muted">Laura Gómez</td>
+                <td class="muted">07/10/2026</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= Script SQL ======================= -->
+    <section id="sql">
+      <div class="container">
+        <div class="script-head" data-reveal>
+          <h2 class="section-title" data-scramble data-i18n="sql.title">Script SQL completo</h2>
+          <button type="button" class="btn" data-copy>
+            <svg class="icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15H4a1 1 0 01-1-1V4a1 1 0 011-1h10a1 1 0 011 1v1"></path></svg>
+            <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"></path></svg>
+            <span data-copy-label data-i18n="sql.copy">Copiar script</span>
+          </button>
+        </div>
+
+        <div class="sql-block" data-reveal>
+          <code data-sql-code data-i18n="sql.loading">Cargando schema.sql…</code>
+        </div>
+        <p class="sql-note" data-sql-note data-reveal data-i18n="sql.note">
+          Se sirve desde schema.sql, el mismo fichero que Maven carga en las pruebas.
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span data-i18n="footer.text">Proyecto de portfolio · helpdesk RoyalTown</span>
+      <a href="https://github.com/AlejandroPD05/ticketing" target="_blank" rel="noopener" data-i18n="footer.repo">Ver repositorio</a>
+    </div>
+  </footer>
+
+  <script src="js/setup.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/reveal.js"></script>
+  <script src="js/tilt.js"></script>
+  <script src="js/magnet.js"></script>
+  <script src="js/cursor.js"></script>
+  <script src="js/scramble.js"></script>
+  <script src="js/chrome.js"></script>
+  <script src="js/er.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>

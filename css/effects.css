@@ -1,0 +1,273 @@
+/* ==========================================================================
+   Effects — cursor, tilt + glare, imanes, reveal, contadores, cabecera y
+   scramble. Réplica del contrato de Portfolio/css/effects.css:
+
+     html.has-custom-cursor      el puntero nativo lo sustituye cursor.js
+       .fx-cursor-dot            punto instantaneo
+       .fx-cursor-ring           anillo con retardo (lerp)
+         .is-visible             el puntero esta sobre el documento
+         .is-hovering            sobre a / button / input / [role]
+         .is-pressed             con el boton pulsado
+     .btn / .icon-toggle
+       .is-magnetic              atraccion magnetica (translate <= 10px)
+     .tiltable
+       .is-tilting               tilt activo; JS escribe --mx / --my (%)
+
+   Todo esta detras de `html.js` (sin JS la pagina es identica), se apaga con
+   `html.motion-off` (?motion=off) y con `prefers-reduced-motion`, y
+   `html.force-motion` (?motion=on) lo fuerza. Solo se usan tokens, asi que
+   dark-mode voltea la paleta del efecto gratis.
+   ========================================================================== */
+
+/* --- Cursor: retira el puntero nativo -------------------------------------- */
+
+html.has-custom-cursor,
+html.has-custom-cursor body,
+html.has-custom-cursor a,
+html.has-custom-cursor button,
+html.has-custom-cursor [role="button"] {
+  cursor: none;
+}
+
+/* Los campos de texto conservan su cursor de insercion. */
+html.has-custom-cursor input,
+html.has-custom-cursor textarea {
+  cursor: text;
+}
+
+/* --- Cursor: las dos capas del puntero ------------------------------------- */
+
+html.has-custom-cursor .fx-cursor-dot,
+html.has-custom-cursor .fx-cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 250; /* por encima de .site-header (100) */
+  pointer-events: none;
+  border-radius: var(--radius-pill);
+  opacity: 0;
+  will-change: transform; /* ambas capas se escriben solo con transforms */
+  transition: opacity var(--t-fast) ease, background-color var(--t-fast) ease,
+    border-color var(--t-fast) ease;
+}
+
+html.has-custom-cursor .fx-cursor-dot {
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px; /* centra la capa en la coordenada del puntero */
+  background: var(--accent);
+}
+
+html.has-custom-cursor .fx-cursor-ring {
+  width: 36px;
+  height: 36px;
+  margin: -18px 0 0 -18px;
+  border: 1px solid var(--accent);
+  background: transparent;
+}
+
+html.has-custom-cursor .fx-cursor-dot.is-visible,
+html.has-custom-cursor .fx-cursor-ring.is-visible {
+  opacity: 1;
+}
+
+/* Sobre un enlace o boton el anillo se abre en halo punteado de acento. */
+html.has-custom-cursor .fx-cursor-ring.is-hovering {
+  border-style: dashed;
+  background: var(--accent-soft);
+}
+
+/* Al pulsar, ambas capas encogen y el acento se hunde: confirma el click. */
+html.has-custom-cursor .fx-cursor-dot.is-pressed {
+  background: var(--accent-strong);
+}
+
+html.has-custom-cursor .fx-cursor-ring.is-pressed {
+  border-color: var(--accent-strong);
+  background: var(--accent-soft);
+}
+
+/* --- Controles magneticos -------------------------------------------------- */
+
+/* El tirón es un translate en linea; esta clase solo aporta el easing y la
+   pista de composicion. Los anillos :focus-visible siguen funcionando. */
+html.js .btn.is-magnetic,
+html.js .icon-toggle.is-magnetic {
+  transition: transform var(--t-fast) var(--ease-out),
+    border-color var(--t-fast) ease, background-color var(--t-fast) ease,
+    color var(--t-fast) ease, box-shadow var(--t-fast) ease;
+  will-change: transform;
+}
+
+/* --- Tilt 3D + glare ------------------------------------------------------- */
+
+html.js .tiltable {
+  position: relative; /* ancla la capa ::after del glare */
+
+  /* opacity/transform replican el timing del reveal para no tocar las
+     entradas; border/shadow dejan que el lift del tilt entre y salga. */
+  transition: opacity 0.8s var(--ease-out), transform 0.8s var(--ease-out),
+    border-color var(--t-fast) ease, box-shadow var(--t-fast) ease;
+}
+
+/* Glare en reposo: brillo de acento que sigue al puntero y esta invisible
+   hasta que el tilt escribe --mx / --my. */
+html.js .tiltable::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    circle 320px at var(--mx, 50%) var(--my, 50%),
+    var(--accent-soft),
+    transparent 72%
+  );
+  transition: opacity var(--t-fast) var(--ease-out);
+}
+
+html.js .tiltable.is-tilting {
+  z-index: 2; /* la tarjeta en tilt gana a sus hermanas en reposo */
+  will-change: transform;
+  box-shadow: 0 18px 34px -18px var(--shadow-accent);
+
+  /* Sin entrada `transform` a proposito: el bucle rAF posee el movimiento
+     frame a frame. */
+  transition: opacity 0.8s var(--ease-out), border-color var(--t-fast) ease,
+    box-shadow var(--t-fast) ease;
+}
+
+html.js .tiltable.is-tilting::after {
+  opacity: 1;
+}
+
+/* --- Reveal al hacer scroll ------------------------------------------------ */
+
+html.js:not(.motion-off) [data-reveal] {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+html.js:not(.motion-off) [data-reveal].is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* --- Contadores animados --------------------------------------------------- */
+
+[data-count-to] {
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Cabecera: glass en base.css; aqui el comportamiento ------------------ */
+
+html.js:not(.motion-off) .site-header {
+  transition: transform 0.4s var(--ease-out), box-shadow var(--t-fast) ease,
+    background-color var(--t-mode) ease;
+}
+
+html.js:not(.motion-off) .site-header.is-hidden {
+  transform: translateY(-100%);
+}
+
+html.js:not(.motion-off) .site-header.is-scrolled {
+  box-shadow: 0 12px 24px -18px var(--shadow-accent);
+}
+
+/* --- Scramble --------------------------------------------------------------
+   Solo marca el elemento animado: no cambia su display, porque los titulares
+   son bloques y convertirlos a inline-block los sentaria en la linea de
+   texto anterior (el eyebrow del hero). */
+
+.scramble {
+  min-width: 1ch;
+}
+
+/* --- Seguridad: sin cursor ni transforms sin puntero fino ----------------- */
+
+@media (hover: none) {
+  /* Los modulos no se arman en punteros gruesos, pero una sesion de lapiz
+     (puntero fino sin hover) si: se devuelve el cursor nativo. */
+  html.has-custom-cursor,
+  html.has-custom-cursor body,
+  html.has-custom-cursor a,
+  html.has-custom-cursor button,
+  html.has-custom-cursor [role="button"] {
+    cursor: revert;
+  }
+
+  html.has-custom-cursor .fx-cursor-dot,
+  html.has-custom-cursor .fx-cursor-ring {
+    display: none;
+  }
+
+  html.js .btn.is-magnetic,
+  html.js .icon-toggle.is-magnetic,
+  html.js .tiltable.is-tilting {
+    will-change: auto;
+    transition: none;
+  }
+}
+
+/* --- Preferencias de movimiento --------------------------------------------
+   :not(.force-motion) deja fuera a `?motion=on`, espejado en <html> por el
+   script de la cabecera. */
+
+@media (prefers-reduced-motion: reduce) {
+  html:not(.force-motion).has-custom-cursor,
+  html:not(.force-motion).has-custom-cursor body,
+  html:not(.force-motion).has-custom-cursor a,
+  html:not(.force-motion).has-custom-cursor button,
+  html:not(.force-motion).has-custom-cursor [role="button"] {
+    cursor: revert;
+  }
+
+  html:not(.force-motion).has-custom-cursor .fx-cursor-dot,
+  html:not(.force-motion).has-custom-cursor .fx-cursor-ring {
+    display: none;
+  }
+
+  html.js:not(.force-motion) .btn.is-magnetic,
+  html.js:not(.force-motion) .icon-toggle.is-magnetic,
+  html.js:not(.force-motion) .tiltable,
+  html.js:not(.force-motion) .tiltable.is-tilting,
+  html.js:not(.force-motion) .tiltable::after {
+    transition: none;
+    will-change: auto;
+  }
+
+  html.js:not(.force-motion) .tiltable.is-tilting::after {
+    opacity: 0;
+  }
+
+  html.js:not(.force-motion) *,
+  html.js:not(.force-motion) *::before,
+  html.js:not(.force-motion) *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  html:not(.force-motion) {
+    scroll-behavior: auto !important;
+  }
+
+  /* Con las transiciones aplanadas el reveal debe dejar el contenido visible
+     de inmediato: la opacidad 0 de [data-reveal] no podria animarse nunca. */
+  html.js:not(.force-motion) [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* --- Impresion: las capas del puntero son mobiliario de pantalla ---------- */
+
+@media print {
+  html.has-custom-cursor .fx-cursor-dot,
+  html.has-custom-cursor .fx-cursor-ring {
+    display: none;
+  }
+}

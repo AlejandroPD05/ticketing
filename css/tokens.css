@@ -1,0 +1,102 @@
+/* ==========================================================================
+   Design tokens — misma fuente de verdad que el portfolio:
+   copia literal de Portfolio/css/tokens.css (paleta verde/terminal, tipografia
+   IBM Plex, escala de espacios y motion), con los tokens propios del
+   helpdesk (estados y prioridades) anyadidos debajo.
+
+   Al usar solo variables, el toggle html.dark-mode vuelca la pagina entera.
+   ========================================================================== */
+
+:root {
+  /* --- Brand palette (light) -------------------------------------------- */
+  --bg: #ffffff;
+  --bg-alt: #f2faf5;
+  --surface: #f7fcf9;
+  --surface-2: #eaf5ee;
+  --border: #a9ccb8;
+  --border-soft: rgba(169, 204, 184, 0.5);
+  --text: #000000;
+  --text-muted: #2e4b3d;
+  --accent: #0b7a3c;
+  --accent-strong: #085c2c;
+  --accent-soft: rgba(11, 122, 60, 0.13);
+  --shadow-accent: rgba(11, 122, 60, 0.3);
+  --on-accent: #ffffff;
+  --header-bg: rgba(255, 255, 255, 0.86);
+
+  /* --- Type ------------------------------------------------------------- */
+  --font-display: "IBM Plex Mono", "Courier New", monospace;
+  --font-body: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  --fs-hero: clamp(2.4rem, 6vw, 4rem);
+  --fs-h2: clamp(1.6rem, 3vw, 2.1rem);
+  --fs-h3: 1.18rem;
+  --fs-body: 1rem;
+  --fs-sm: 0.92rem;
+  --fs-xs: 0.78rem;
+
+  /* --- Space ------------------------------------------------------------ */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+  --section-y: clamp(72px, 10vw, 120px);
+
+  /* --- Shape ------------------------------------------------------------ */
+  --radius: 4px;
+  --radius-lg: 8px;
+  --radius-pill: 999px;
+  --maxw: 1120px;
+  --header-h: 72px;
+
+  /* --- Motion ----------------------------------------------------------- */
+  --t-fast: 0.3s;
+  --t-mode: 0.5s;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* --- Helpdesk: estados del ciclo de vida ------------------------------ */
+  --status-abierto: #1f6feb;
+  --status-progreso: #b8860b;
+  --status-pendiente: #5c6b63;
+  --status-resuelto: var(--accent);
+  --status-cerrado: #6b8478;
+
+  /* --- Helpdesk: prioridades -------------------------------------------- */
+  --prio-baja: #5c6b63;
+  --prio-media: #1f6feb;
+  --prio-alta: #b8860b;
+  --prio-critica: #d64545;
+}
+
+html.dark-mode {
+  --bg: #000000;
+  --bg-alt: #030a05;
+  --surface: #0c1f16;
+  --surface-2: #11281c;
+  --border: #2f6b4c;
+  --border-soft: rgba(47, 107, 76, 0.55);
+  --text: #ffffff;
+  --text-muted: #cfe3d7;
+  --accent: #6fffb0;
+  --accent-strong: #3fe28a;
+  --accent-soft: rgba(11, 255, 176, 0.16);
+  --shadow-accent: rgba(11, 255, 176, 0.4);
+  --on-accent: #00110a;
+  --header-bg: rgba(6, 11, 8, 0.82);
+
+  --status-abierto: #5ba8ff;
+  --status-progreso: #ffc24b;
+  --status-pendiente: #9aa7a0;
+  --status-resuelto: var(--accent);
+  --status-cerrado: #6b8478;
+
+  --prio-baja: #9aa7a0;
+  --prio-media: #5ba8ff;
+  --prio-alta: #ffc24b;
+  --prio-critica: #ff6b6b;
+}
