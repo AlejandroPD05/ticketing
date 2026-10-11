@@ -102,7 +102,10 @@ ellos fuera de SLA.
 
 `ConexionDB` resuelve la conexión en este orden: variables de entorno →
 `src/main/resources/db.properties` → valores por defecto
-(`jdbc:mysql://localhost:3306/helpdesk`, `helpdesk`/`helpdesk`):
+(`jdbc:mysql://localhost:3306/helpdesk`, `helpdesk`/`helpdesk`).
+
+`db.properties` está en `.gitignore` (no sube credenciales): copia
+`src/main/resources/db.properties.example` a `db.properties` y ajústalo.
 
 ```bash
 HELPDESK_DB_URL=jdbc:mysql://localhost:3306/helpdesk

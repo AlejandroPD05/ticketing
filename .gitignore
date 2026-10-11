@@ -1,6 +1,9 @@
 # Maven
 target/
 
+# Configuracion local (no subir credenciales)
+db.properties
+
 # IDE
 .idea/
 *.iml

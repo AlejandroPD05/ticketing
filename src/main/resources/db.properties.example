@@ -1,0 +1,6 @@
+# Copia este fichero a db.properties (misma carpeta) y ajusta tus valores.
+# Tiene prioridad baja: las variables HELPDESK_DB_URL, HELPDESK_DB_USER y
+# HELPDESK_DB_PASSWORD del entorno la sustituyen si estan definidas.
+db.url=jdbc:mysql://localhost:3306/helpdesk?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+db.user=helpdesk
+db.password=helpdesk
