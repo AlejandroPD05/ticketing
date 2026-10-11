@@ -107,6 +107,9 @@ ellos fuera de SLA.
 `db.properties` está en `.gitignore` (no sube credenciales): copia
 `src/main/resources/db.properties.example` a `db.properties` y ajústalo.
 
+Notas de mantenimiento del repositorio (qué no versionar, purga de secretos
+del historial) en [`GIT.md`](GIT.md).
+
 ```bash
 HELPDESK_DB_URL=jdbc:mysql://localhost:3306/helpdesk
 HELPDESK_DB_USER=helpdesk
