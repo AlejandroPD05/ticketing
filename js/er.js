@@ -63,7 +63,7 @@
           /* se conserva el fallback */
         });
       }
-    } catch (e) {
+    } catch {
       /* se conserva el fallback */
     }
   }

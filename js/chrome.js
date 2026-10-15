@@ -83,7 +83,7 @@
     try {
       /* Los clics de ratón no casan con :focus-visible: no anclan la barra. */
       return activo.matches(":focus-visible");
-    } catch (error) {
+    } catch {
       /* Selector no soportado: se queda visible por seguridad. */
       return true;
     }

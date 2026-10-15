@@ -22,12 +22,6 @@
     return bloque.textContent || "";
   }
 
-  function escapar(texto) {
-    // textContent ya escapa al asignarlo; aqui va el fallback de < > por si se
-    // usa innerHTML en el branch de error.
-    return texto.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  }
-
   fetch("schema.sql", { cache: "no-cache" })
     .then(function (respuesta) {
       if (!respuesta.ok) {
@@ -102,7 +96,7 @@
     try {
       document.execCommand("copy");
       alListo();
-    } catch (e) {
+    } catch {
       /* el navegador bloqueo la copia manual */
     }
     document.body.removeChild(area);

@@ -19,3 +19,19 @@ jobs:
 
       - name: Pruebas JUnit (H2 en modo MySQL)
         run: mvn -B test
+
+  lint-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias del linter
+        run: npm ci
+
+      - name: ESLint (web de documentacion)
+        run: npm run lint

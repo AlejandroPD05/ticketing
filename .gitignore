@@ -1,3 +1,6 @@
+# Dependencias de desarrollo del linter (la web no tiene build)
+node_modules/
+
 # Maven
 target/
 

@@ -201,7 +201,7 @@
   function guardado() {
     try {
       return localStorage.getItem(CLAVE);
-    } catch (e) {
+    } catch {
       return null;
     }
   }
@@ -265,7 +265,7 @@
     actual = actual === "es" ? "en" : "es";
     try {
       localStorage.setItem(CLAVE, actual);
-    } catch (e) {
+    } catch {
       /* modo privado */
     }
     aplicar();

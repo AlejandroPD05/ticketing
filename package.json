@@ -1,0 +1,16 @@
+{
+  "name": "helpdesk-royaltown-web",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Web documental del helpdesk (la app es Java/Maven; esto solo es la vitrina)",
+  "scripts": {
+    "lint": "eslint js script.js",
+    "serve": "npx --yes serve ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.21.0",
+    "eslint": "^9.21.0",
+    "globals": "^15.15.0"
+  },
+  "type": "module"
+}
