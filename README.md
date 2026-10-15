@@ -1,5 +1,15 @@
 # Helpdesk RoyalTown — sistema de tickets
 
+[![CI](https://github.com/AlejandroPD05/ticketing/actions/workflows/ci.yml/badge.svg)](https://github.com/AlejandroPD05/ticketing/actions/workflows/ci.yml)
+![Java 21](https://img.shields.io/badge/Java-21-blue)
+![JUnit 5](https://img.shields.io/badge/JUnit-5-green)
+![License](https://img.shields.io/badge/license-MIT-lightgrey)
+
+**▶ Demo web (modelo de datos):** https://alejandropd05.github.io/ticketing/
+
+> El sistema corre en **terminal** (CLI por roles); la web documenta su
+> modelo de datos y su arquitectura.
+
 Sistema de tickets completo para un helpdesk interno: **esquema MySQL trazable,
 capa de servicios en Java con JDBC y transacciones, CLI de demostración por
 roles y 21 pruebas JUnit** que corren sobre el mismo script SQL.

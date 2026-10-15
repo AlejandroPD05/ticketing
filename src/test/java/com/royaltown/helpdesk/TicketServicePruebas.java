@@ -169,11 +169,15 @@ class TicketServicePruebas extends BasePruebas {
         Ticket actualizado = tickets.cambiarPrioridad(laura(), t.id(), critica);
 
         assertEquals("Critica", actualizado.prioridad().nombre());
-        // H2 (como MySQL) guarda TIMESTAMP con precision de microsegundos
-        assertEquals(
+        // H2 (como MySQL) guarda TIMESTAMP con precision de microsegundos y
+        // redondea, mientras que fechaCreacion() en memoria lleva nanosegundos:
+        // se compara con tolerancia de 1 microsegundo para que el test no sea
+        // flaky (fallaba ~50 % de las corridas por el redondeo).
+        long dif = java.time.Duration.between(
                 t.fechaCreacion().plusHours(4).truncatedTo(java.time.temporal.ChronoUnit.MICROS),
-                actualizado.fechaLimite(),
-                "el SLA se recalcula contra la fecha de creacion");
+                actualizado.fechaLimite()).abs().toNanos();
+        assertTrue(dif <= 1_000,
+                "el SLA se recalcula contra la fecha de creacion (desviacion " + dif + " ns)");
 
         List<HistorialCambio> historial = tickets.historialDe(marta(), t.id());
         assertTrue(historial.stream().anyMatch(
