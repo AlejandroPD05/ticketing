@@ -12,7 +12,8 @@
 
 Sistema de tickets completo para un helpdesk interno: **esquema MySQL trazable,
 capa de servicios en Java con JDBC y transacciones, CLI de demostración por
-roles y 21 pruebas JUnit** que corren sobre el mismo script SQL.
+roles, API REST de solo lectura y 30 pruebas JUnit** que corren sobre el
+mismo script SQL.
 
 | Capa     | Tecnología                                     |
 | -------- | ---------------------------------------------- |
@@ -63,6 +64,7 @@ Cerrado(5)`, con reaperturas `Resuelto/Cerrado → En_Progreso`.
 ```
 src/main/java/com/royaltown/helpdesk/
 ├── cli/         Main y Consola: menús por rol, sin SQL ni reglas de negocio
+├── api/         ApiMain, ServidorApi y Json: API REST de solo lectura (JDK HttpServer)
 ├── service/     TicketService, AuthService, ReporteService, CatalogoService
 ├── dao/         Unit of work: los escritos reciben la Connection abierta
 ├── model/       Ticket, Usuario, Estado, Prioridad, Catálogo (inmutables)
@@ -132,10 +134,82 @@ HELPDESK_DB_PASSWORD=helpdesk
 mvn test
 ```
 
-21 pruebas (permisos, máquina de estados, SLA, auditoría, transacciones,
-valoraciones, autenticación e informes) sobre **H2 en modo MySQL** que cargan
-el `schema.sql` real vía `RunScript`: si el esquema se rompe, se rompen las
-pruebas. Por convención, las clases de prueba terminan en `*Pruebas`.
+30 pruebas (permisos, máquina de estados, SLA, auditoría, transacciones,
+valoraciones, autenticación, informes y **API REST** sobre `HttpClient` del
+JDK) sobre **H2 en modo MySQL** que cargan el `schema.sql` real vía
+`RunScript`: si el esquema se rompe, se rompen las pruebas. Por convención,
+las clases de prueba terminan en `*Pruebas`.
+
+## API REST
+
+Backend HTTP de **solo lectura** que expone los mismos datos que la CLI,
+reutilizando la capa de servicios y los DAO existentes. Usa
+`com.sun.net.httpserver.HttpServer` (del propio JDK): **cero dependencias
+nuevas** y la CLI queda intacta.
+
+### Arranque
+
+Con MySQL en marcha (misma configuración que la CLI):
+
+```bash
+# Puerto 8080 por defecto
+mvn -q compile exec:java -Dexec.mainClass=com.royaltown.helpdesk.api.ApiMain
+
+# Puerto personalizado
+mvn -q compile exec:java -Dexec.mainClass=com.royaltown.helpdesk.api.ApiMain -Dexec.args="9090"
+```
+
+O sin Maven, una vez compilado (el classpath debe incluir el driver de MySQL):
+
+```bash
+mvn -q compile dependency:build-classpath -Dmdep.outputFile=target/cp.txt
+java -cp "target/classes;$(cat target/cp.txt)" com.royaltown.helpdesk.api.ApiMain 8080
+```
+
+### Endpoints
+
+| Método | Ruta                  | Descripción                                                          |
+| ------ | --------------------- | -------------------------------------------------------------------- |
+| GET    | `/api/salud`          | Estado del servidor y versión                                         |
+| GET    | `/api/tickets`        | Listado paginado; filtros `estado`, `prioridad`, `pagina`, `tamano`  |
+| GET    | `/api/tickets/{id}`   | Detalle del ticket + sus comentarios + su historial                  |
+| GET    | `/api/catalogo`       | Estados, prioridades, categorías y matriz de transiciones            |
+| GET    | `/api/informes/kpis`  | KPIs de las vistas: abiertos, SLA incumplido, resolución por técnico |
+
+Todos responden `application/json; charset=utf-8`. `estado` y `prioridad`
+aceptan el id numérico o el nombre (`estado=Abierto`); la paginación usa
+`pagina` (mínimo 1) y `tamano` (máximo 100).
+
+```bash
+curl http://localhost:8080/api/salud
+curl "http://localhost:8080/api/tickets?estado=Abierto&prioridad=Alta&pagina=1&tamano=10"
+curl http://localhost:8080/api/tickets/1
+curl http://localhost:8080/api/catalogo
+curl http://localhost:8080/api/informes/kpis
+```
+
+Errores uniformes: `{"error": "mensaje"}` con el código adecuado — 400
+(parámetros inválidos), 404 (ticket inexistente), 405 (método distinto de
+GET) y 500 (fallo interno registrado en stderr; nunca se devuelve un
+stacktrace al cliente).
+
+### Decisiones
+
+- **Solo lectura.** No hay endpoints de escritura: las mutaciones siguen
+  siendo competencia de la CLI, que las hace pasar por sesión, permisos y
+  transacciones (`Transaccion.ejecutar`). Publicar escritura sin
+  autenticación rompería el modelo de permisos del helpdesk; si algún día se
+  necesita, llegará después de la autenticación, no antes.
+- **CORS abierto** (`Access-Control-Allow-Origin: *` en todas las
+  respuestas, con manejo de `OPTIONS`): permite probar la API desde el
+  navegador sirviendo la web de Pages, que vive en otro origen.
+- **Sin autenticación**: es un demo local de solo lectura y los datos son la
+  semilla pública del repositorio. En producción: autenticación (API keys o
+  JWT), limitación del origen CORS a la aplicación y HTTPS.
+- **Serialización JSON propia** (`api/Json.java`), sin dependencias: cubre
+  strings, números, booleanos, null, listas, mapas, fechas ISO-8601 y
+  records del modelo; escapa comillas, barras invertidas y caracteres de
+  control en todo texto volcado.
 
 ## Regenerar los datos de ejemplo
 

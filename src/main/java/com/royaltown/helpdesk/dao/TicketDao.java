@@ -34,21 +34,29 @@ public class TicketDao {
 
     /** Filtro de listado combinable. */
     public record Filtro(Integer idCreador, Integer idTecnico, Integer idEstado,
-                         Boolean soloSinResolver) {
+                         Integer idPrioridad, Boolean soloSinResolver) {
         public static Filtro todo() {
-            return new Filtro(null, null, null, null);
+            return new Filtro(null, null, null, null, null);
         }
 
         public Filtro deCreador(int id) {
-            return new Filtro(id, idTecnico, idEstado, soloSinResolver);
+            return new Filtro(id, idTecnico, idEstado, idPrioridad, soloSinResolver);
         }
 
         public Filtro deTecnico(int id) {
-            return new Filtro(idCreador, id, idEstado, soloSinResolver);
+            return new Filtro(idCreador, id, idEstado, idPrioridad, soloSinResolver);
+        }
+
+        public Filtro deEstado(int id) {
+            return new Filtro(idCreador, idTecnico, id, idPrioridad, soloSinResolver);
+        }
+
+        public Filtro dePrioridad(int id) {
+            return new Filtro(idCreador, idTecnico, idEstado, id, soloSinResolver);
         }
 
         public Filtro sinResolver() {
-            return new Filtro(idCreador, idTecnico, idEstado, Boolean.TRUE);
+            return new Filtro(idCreador, idTecnico, idEstado, idPrioridad, Boolean.TRUE);
         }
     }
 
@@ -123,6 +131,10 @@ public class TicketDao {
         if (filtro.idEstado() != null) {
             sql.append("AND t.id_estado = ? ");
             parametros.add(filtro.idEstado());
+        }
+        if (filtro.idPrioridad() != null) {
+            sql.append("AND t.id_prioridad = ? ");
+            parametros.add(filtro.idPrioridad());
         }
         if (Boolean.TRUE.equals(filtro.soloSinResolver())) {
             sql.append("AND e.nombre NOT IN ('Resuelto', 'Cerrado') ");
